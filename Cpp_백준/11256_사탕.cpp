@@ -14,7 +14,8 @@ int main(){
             boxArr[i] = ri * ci;
         }
         sort(boxArr, boxArr + box);
-        for (int i = 0; i < box; i++){
+        for (int i = box - 1; i >= 0; i--){
+			//cout << "cnt : " << cnt << " candy : " << candy << endl;
             if (candy <= 0) break;
             candy -= boxArr[i];
             cnt += 1;
