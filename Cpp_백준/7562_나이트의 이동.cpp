@@ -9,7 +9,6 @@ struct Dir{
 };
 Dir D[8] = {{1, -2}, {2, -1}, {2, 1}, {1, 2}, {-1, 2}, {-2, 1}, {-2, -1}, {-1, -2}};
 
-vector<int> *graph;
 vector<int> *visit;
 queue<Dir> q;
 int l;
@@ -18,6 +17,7 @@ void bfs(int cX, int cY){
     Dir t;
 
     q.push({cX, cY});
+	visit[cY].at(cX) = 0;
     while(!q.empty()){
         t = q.front();
         for (int i = 0; i < 8; i++){
@@ -37,23 +37,12 @@ int main(){
     cin >> testCase;
     while(testCase--){
         cin >> l >> currentx >> currenty >> gox >> goy;
-        graph = new vector<int>[l];
         visit = new vector<int>[l];
         
         for (int i = 0; i < l; i++){
-            for (int j = 0; j < l; j++){
-                visit[i].push_back(-1);
-                if (i != gox && j != goy) graph[i].push_back(0);
-                else graph[i].push_back(1);
-            }
+            for (int j = 0; j < l; j++) visit[i].push_back(-1);
         }
         bfs(currentx, currenty);
-        for (int i = 0; i < l;i++){
-            for (int j = 0; j < l; j++){
-                cout << visit[j].at(i) << " ";
-            }
-            cout << endl;
-        }
         cout << visit[goy].at(gox) << endl;
     }
 }
