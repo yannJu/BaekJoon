@@ -1,5 +1,5 @@
-#include<iostream>
-#include<algorithm>
+#include <iostream>
+#include <algorithm>
 using namespace std;
 
 struct SCHEDULE{
@@ -8,32 +8,29 @@ struct SCHEDULE{
 };
 
 int main(){
-    int day, *dp, tmp1, tmp2;
+    int day, *dp, tmp1, tmp2, mx;
     SCHEDULE *arr;
+
     cin >> day;
-
     arr = new SCHEDULE[day];
-    dp = new int[day];
+    dp  = new int[day];
 
-    for (int i = 0; i < day; i++) {
+    for (int i  = 0; i < day; i++){
         cin >> tmp1 >> tmp2;
         arr[i] = {tmp1, tmp2};
-    } 
+        dp[i] = arr[i].p;
+    }
 
-    for (int i = 0; i < day; i++){
-        if (i == 0) dp[i] = arr[i].p;
-        else if (i == 1){
-            if (arr[i - 1].t == 1) dp[i] = max(dp[i - 1] + arr[i].t, arr[i].t);
-            else dp[i] = arr[i].t;
-        }
-        else{
-            for (int j = 0; j < i; j++){
-                
-            }
+    dp[0] = arr[0].p;
+    mx = dp[0];
+    for (int i = 1; i < day; i++){
+        for (int j = 0; j < i; j++){
+            if (j + arr[j].t <= i) dp[i] = max(dp[j] + arr[j + arr[j].t].p, dp[i]);
         }
     }
 
-    cout << mx << endl;
+    for (int i = 0; i < day; i++) cout << "dp : " <<  dp[i] << endl;
+
     delete arr;
     delete dp;
 }
