@@ -37,7 +37,7 @@ using namespace std;
 
 int main(){
     int t_case, tmp;
-    long long int result;
+    long long int result = 0;
     vector<int> v;
 
     cin >> t_case;
