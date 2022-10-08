@@ -40,57 +40,73 @@ A의 3번 위치와 B의 9번 위치를 잇는 전깃줄, A의 4번 위치와 B�
 #include <algorithm>
 using namespace std;
 
+struct AB {
+    int A;
+    int B;
+};
+
+bool compareAB(AB a, AB b) {
+    if (a.A < b.A) return true;
+    else return false;
+}
+
 bool compare(pair<int, int> a, pair<int, int> b) {
-    if (b.second > a.second) return true;
+    if (a.second > b.second) return true;
     else return false;
 }
 
 int main() {
-    int N, allSum = 0, cnt = 0;
-    vector<int> memo, leftCkMemo, rightCkMemo;
-    vector<pair<int, int> > result;
+    int N, maxLine = -1; 
+    vector<AB> memo;
+    vector<pair<int, int> > check;
 
     cin >> N;
-    
-    //Create Memo
-    for (int i = 0; i < N; i++) {memo.push_back(-1); leftCkMemo.push_back(0); rightCkMemo.push_back(0);}
     for (int i = 0; i < N; i++) {
         int tmpA, tmpB;
+        AB tmp;
+
         cin >> tmpA >> tmpB;
-        memo[tmpA - 1] = tmpB - 1;
+        tmp.A = tmpA;
+        tmp.B = tmpB;
+        memo.push_back(tmp);
+        maxLine = max({maxLine, tmpA, tmpB});
     }
-    
-    //Check
+
+    // 건물 A를 기준으로 오름차순 정렬
+    sort(memo.begin(), memo.end(), compareAB);
+
+    // 꼬인 건물 수를 체킹
+    for (int i = 0; i < maxLine; i++) check.push_back(make_pair(i, 0));
+
     for (int i = 0; i < N; i++) {
-        if (memo[i] > -1) {
-            for (int j = 0; j < i; j++) {
-                if (memo[i] < memo[j] && memo[j] > -1) leftCkMemo[i] += 1;
-            }
-            for (int k = i + 1; k < N; k++) {
-                if (memo[i] >  memo[k] && memo[k] > -1) rightCkMemo[i] += 1;
-            }
+        // Left Check
+        for (int j = 0; j < i; j++) {
+            if (memo[i].B < memo[j].B) check[i].second += 1;
+        }
+        
+        // Right Check
+        for (int k = i + 1; k < N; k++) {
+            if (memo[i].B > memo[k].B) check[i].second += 1;
         }
     }
 
-    //Result
-    for (int i = 0; i < N; i++) {
-        result.push_back(make_pair(i, leftCkMemo[i] + rightCkMemo[i]));
-        allSum += (leftCkMemo[i] + rightCkMemo[i]);
-    }
+    sort(check.begin(), check.end(), compare);
 
-    sort(result.begin(), result.end(), compare);
-    for (int i = 0; i < N; i++) {
-        if (allSum == 0) break;
-        cnt += 1;
-        allSum -= result[i].second;
-        for (int j = 0; j < N; j++) {
-            if ((i > j && memo[i] < memo[j]) || (i < j && memo[i] > memo[j])) {
-                allSum -= 1;
-                leftCkMemo[j] -= 1;
-                rightCkMemo[j] -= 1;
-            }
+    // 많이 꼬인 전깃줄 순서대로 제거
+    int cnt = 0;
+    for (int i = 0; i < check.size(); i++) {
+        int isCnt = 0;
+        for (int j = 0; j < check.size(); j++) {
+            if ((check[i].first < check[j].first && memo[check[i]] > check[j].second) || (check[i].first > check[j].first && check[i].second < check[j].second)) {
+                check[j].second -= 1;
+                check[i].second -= 1;
+                if (isCnt == 0) {
+                    isCnt = 1;
+                    cnt += 1;
+                }
+            } 
         }
     }
 
-     cout << cnt << endl;
+    cout << cnt << endl;
 }
