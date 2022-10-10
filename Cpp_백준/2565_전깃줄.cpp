@@ -38,75 +38,37 @@ A의 3번 위치와 B의 9번 위치를 잇는 전깃줄, A의 4번 위치와 B�
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#define pii pair<int, int>
 using namespace std;
 
-struct AB {
-    int A;
-    int B;
-};
-
-bool compareAB(AB a, AB b) {
-    if (a.A < b.A) return true;
-    else return false;
-}
-
-bool compare(pair<int, int> a, pair<int, int> b) {
-    if (a.second > b.second) return true;
+bool compareA(pii a, pii b) {
+    if (a.first < b.first) return true;
     else return false;
 }
 
 int main() {
-    int N, maxLine = -1; 
-    vector<AB> memo;
-    vector<pair<int, int> > check;
+    int N, maxResult = -1;
+    vector<pii> v;
+    vector<int> memo;
 
     cin >> N;
     for (int i = 0; i < N; i++) {
-        int tmpA, tmpB;
-        AB tmp;
+        int A, B;
 
-        cin >> tmpA >> tmpB;
-        tmp.A = tmpA;
-        tmp.B = tmpB;
-        memo.push_back(tmp);
-        maxLine = max({maxLine, tmpA, tmpB});
+        cin >> A >> B;
+        v.push_back(make_pair(A, B));
+        memo.push_back(1);
     }
+    // A를 기준으로 정렬
+    sort(v.begin(), v.end(), compareA);
 
-    // 건물 A를 기준으로 오름차순 정렬
-    sort(memo.begin(), memo.end(), compareAB);
-
-    // 꼬인 건물 수를 체킹
-    for (int i = 0; i < maxLine; i++) check.push_back(make_pair(i, 0));
-
+    // B에 대해 가장 긴 증가하는 부분 수열을 구함
     for (int i = 0; i < N; i++) {
-        // Left Check
         for (int j = 0; j < i; j++) {
-            if (memo[i].B < memo[j].B) check[i].second += 1;
+            if (v[i].second > v[j].second) memo[i] = max(memo[i], memo[j] + 1);
         }
-        
-        // Right Check
-        for (int k = i + 1; k < N; k++) {
-            if (memo[i].B > memo[k].B) check[i].second += 1;
-        }
+        maxResult = max(maxResult, memo[i]);
     }
 
-    sort(check.begin(), check.end(), compare);
-
-    // 많이 꼬인 전깃줄 순서대로 제거
-    int cnt = 0;
-    for (int i = 0; i < check.size(); i++) {
-        int isCnt = 0;
-        for (int j = 0; j < check.size(); j++) {
-            if ((check[i].first < check[j].first && memo[check[i]] > check[j].second) || (check[i].first > check[j].first && check[i].second < check[j].second)) {
-                check[j].second -= 1;
-                check[i].second -= 1;
-                if (isCnt == 0) {
-                    isCnt = 1;
-                    cnt += 1;
-                }
-            } 
-        }
-    }
-
-    cout << cnt << endl;
+    cout << N - maxResult << endl;
 }
