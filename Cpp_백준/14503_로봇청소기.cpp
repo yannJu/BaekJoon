@@ -61,6 +61,7 @@
 #define vii vector<vector<int> >
 using namespace std;
 
+int ckClean(vii *MAP, int r, int c, int d);
 int main() {
     int n, m; //세로, 가로
     int r, c, d; //북쪽으로 부터 떨어진 정도, 서쪽으로 부터 떨어진 정도(즉 y, x), 방향 -> 동서남북(1320)
@@ -73,30 +74,46 @@ int main() {
         for (int j = 0; j < m; j++) cin >> map[i][j];
     }
 
-    cout << ckClean(map, r, c, d) << endl;
+    cout << ckClean(&map, r, c, d) << endl;
 }
 
-int ckClean(vii map, int r, int c, int d) {
-    vii DIR(4, vector<int>(2, 0));
+int ckClean(vii *MAP, int r, int c, int d) {
+    vii map = *MAP, DIR(4, vector<int>(3, 0));
     int dir = d, y = r, x = c, n = map.size(), m = map[0].size();
-    int nextY, nextX;
+    int nextY, nextX, nextDir, result = 0;
 
-    DIR[0].push_back(-1); DIR[0].push_back(0); DIR[0].push_back(3); // 방향이 북일경우 서쪽을 바라보게 됨
-    DIR[1].push_back(0); DIR[1].push_back(1); DIR[0].push_back(0); // 방향이 동일경우 북쪽을 바라보게 됨
-    DIR[2].push_back(1); DIR[2].push_back(0); DIR[0].push_back(1); // 방향이 남일경우 동쪽을 바라보게 됨
-    DIR[3].push_back(0); DIR[3].push_back(-1); DIR[0].push_back(2); // 방향이 서일경우 남쪽을 바라보게 됨
+    DIR[0][0] = -1; DIR[0][1] = 0; DIR[0][2] = 3; // 방향이 북일경우 서쪽을 바라보게 됨
+    DIR[1][0] = 0; DIR[1][1] = 1; DIR[1][2] = 0; // 방향이 동일경우 북쪽을 바라보게 됨
+    DIR[2][0] = 1; DIR[2][1] = 0; DIR[2][2] = 1; // 방향이 남일경우 동쪽을 바라보게 됨
+    DIR[3][0] = 0; DIR[3][1] = -1; DIR[3][2] = 2; // 방향이 서일경우 남쪽을 바라보게 됨
 
     while(1) {
-        if (map[y][x] == 0) {
-            map[y][x] = -1;
-            nextY = y + DIR[dir][0]; nextX = x + DIR[dir][1];
+        result += 1;
+        map[y][x] = -1 * result; // 1. 현재 위치를 청소한다.
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) cout << map[i][j] << " ";
+            cout << endl;
+        }
+        cout << " ===================== \n";
+        int i = 0; // 2번.
+        for (i; i < 4; i++) {
+            nextDir = DIR[dir][2];
+            nextY = y + DIR[nextDir][0]; nextX = x + DIR[nextDir][1]; // 왼쪽 방향의 좌표 setting
+            cout << nextDir << " " << nextY << " " << nextX << endl;
             if ((nextY >= 0 && nextY < n) && (nextX >= 0 && nextX < m)) {
-                if (map[nextY][nextX] == 0) {
-                    dir = DIR[dir][2];
-                    y = nextY; x = nextX;
+                if (i == 3 || map[nextY][nextX] == 1) { // 4방향이 모두 청소 되었거나 벽인 경우
+                    if (map[y + (DIR[dir][0] * -1)][x + (DIR[dir][1] * -1)] == 1) { // 후진도 불가능한 경우
+                        return result;
+                    }
+                    y += DIR[dir][0] * -1; x += DIR[dir][1] * -1; // 방향 유지, 후진;
+                    i = 0; // 2번으로 다시 돌아간다.
                 }
-                else if (map[nextY][nextX] == -1) {
-                    dir = DIR
+                else {
+                    dir = nextDir; // 방향전환
+                    if (map[nextY][nextX] == 0) { // 청소가 안되어 있는 경우
+                        y = nextY; x = nextX; // 이동
+                        break; // 1번으로 돌아간다.
+                    }
                 }
             }
         }
