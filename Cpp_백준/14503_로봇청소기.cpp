@@ -61,61 +61,70 @@
 #define vii vector<vector<int> >
 using namespace std;
 
-int ckClean(vii *MAP, int r, int c, int d);
+vii DIR(4, vector<int>(3, 0));
+void ckClean(vii* MAP, int r, int c, int d, int* result, int isclean);
 int main() {
     int n, m; //세로, 가로
     int r, c, d; //북쪽으로 부터 떨어진 정도, 서쪽으로 부터 떨어진 정도(즉 y, x), 방향 -> 동서남북(1320)
+    int result = 0;
 
     cin >> n >> m;
     cin >> r >> c >> d;
     vii map(n, vector<int>(m, 0));
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) cin >> map[i][j];
-    }
-
-    cout << ckClean(&map, r, c, d) << endl;
-}
-
-int ckClean(vii *MAP, int r, int c, int d) {
-    vii map = *MAP, DIR(4, vector<int>(3, 0));
-    int dir = d, y = r, x = c, n = map.size(), m = map[0].size();
-    int nextY, nextX, nextDir, result = 0;
-
+    
     DIR[0][0] = -1; DIR[0][1] = 0; DIR[0][2] = 3; // 방향이 북일경우 서쪽을 바라보게 됨
     DIR[1][0] = 0; DIR[1][1] = 1; DIR[1][2] = 0; // 방향이 동일경우 북쪽을 바라보게 됨
     DIR[2][0] = 1; DIR[2][1] = 0; DIR[2][2] = 1; // 방향이 남일경우 동쪽을 바라보게 됨
     DIR[3][0] = 0; DIR[3][1] = -1; DIR[3][2] = 2; // 방향이 서일경우 남쪽을 바라보게 됨
 
-    while(1) {
-        result += 1;
-        map[y][x] = -1 * result; // 1. 현재 위치를 청소한다.
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) cout << map[i][j] << " ";
-            cout << endl;
-        }
-        cout << " ===================== \n";
-        int i = 0; // 2번.
-        for (i; i < 4; i++) {
-            nextDir = DIR[dir][2];
-            nextY = y + DIR[nextDir][0]; nextX = x + DIR[nextDir][1]; // 왼쪽 방향의 좌표 setting
-            cout << nextDir << " " << nextY << " " << nextX << endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) cin >> map[i][j];
+    }
+
+    ckClean(&map, r, c, d, &result, 1);
+    cout << result << endl;
+}
+
+void ckClean(vii* MAP, int r, int c, int d, int* result, int isclean) {
+    vii map = *MAP;
+    int dir = d, y = r, x = c, n = map.size(), m = map[0].size(), cnt = 0;
+    int nextY, nextX, nextDir;
+
+    if (isclean == 1) {
+        map[y][x] = -1; // 후진해서 온게 아니면 청소
+        result[0] += 1;
+    } 
+    int i = 0;
+    for (i; i < 4; i++) {
+        // cout << y << " " << x << "  dir : " << dir << " CN T "   << cnt << " result : " << result[0] << endl;
+        nextDir = DIR[dir][2];
+        nextX = x + DIR[nextDir][1];  nextY = y + DIR[nextDir][0]; 
+        // cout << "next :  " << nextY << " " << nextX << "  I : " << i << endl;
+        if (cnt == 4) {
+            nextY =  y + (DIR[dir][0] * -1); nextX = x + (DIR[dir][1] * -1); // 후진 하는 좌표
             if ((nextY >= 0 && nextY < n) && (nextX >= 0 && nextX < m)) {
-                if (i == 3 || map[nextY][nextX] == 1) { // 4방향이 모두 청소 되었거나 벽인 경우
-                    if (map[y + (DIR[dir][0] * -1)][x + (DIR[dir][1] * -1)] == 1) { // 후진도 불가능한 경우
-                        return result;
-                    }
-                    y += DIR[dir][0] * -1; x += DIR[dir][1] * -1; // 방향 유지, 후진;
-                    i = 0; // 2번으로 다시 돌아간다.
-                }
-                else {
-                    dir = nextDir; // 방향전환
-                    if (map[nextY][nextX] == 0) { // 청소가 안되어 있는 경우
-                        y = nextY; x = nextX; // 이동
-                        break; // 1번으로 돌아간다.
-                    }
+                if (map[nextY][nextX] == 1) return; // 4방향 모두 청소 or 벽이면서 뒤쪽이 벽인 경우 작동 멈춤
+                else { // 후진이 가능한 경우
+                    i = 0; // 2번으로 돌아간다.
+                    x = nextX; y = nextY; // 후진
+                    cnt = 0;
                 }
             }
+            else return; 
+        }
+        else {
+            if ((nextY >= 0 && nextY < n) && (nextX >= 0 && nextX < m)) {
+                if (map[nextY][nextX] == 0) {
+                    ckClean(&map, nextY, nextX, nextDir, result, 1); // 청소가 가능한 경우 1번부터 다시 진행
+                    break;
+                }
+                else if (map[nextY][nextX] != 0) {
+                    cnt += 1;
+                    dir = nextDir; //방향회전
+                    i = 0; // 2번으로 돌아간다.
+                }
+            }
+            else cnt += 1;
         }
     }
 }
