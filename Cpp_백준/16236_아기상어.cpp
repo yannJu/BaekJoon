@@ -126,15 +126,20 @@ int main() {
     // Fine Nearest Fish
     vector<int> now; // 0 : y좌표, 1 : x좌표, 2 : 이동시간, 3 : 아기상어의 크기가 커질 수 있는지(1 : true, 0 : false)
     int sharkEat = 0;
-    while(y > -1) {
+    while(1) {
+        map[y][x] = 0;
         now = findXY(map, y, x, sharkSz, sharkEat);
-        result += now[2];
-        map[now[0]][now[1]] = 0;
         y = now[0]; x = now[1];
-        if (now[3] == 1) sharkEat += 1;
-    cout << now[0] << " " << now[1] << " " << now[2] << " " << now[3] << " Result : " << result << endl;
+        if (y < 0) break;
+        result += now[2];
+        sharkEat += 1;
+        if (now[3] == 1) {
+            sharkSz += 1;
+            sharkEat = 0;
+        }
     }
 
+    cout << result << endl;
 }
 
 vector<int> findXY(vii map, int y, int x, int sharkSz, int sharkEat) {
@@ -153,16 +158,8 @@ vector<int> findXY(vii map, int y, int x, int sharkSz, int sharkEat) {
 
             if ((nextY >= 0 && nextY < map.size()) && (nextX >= 0 && nextX < map.size())) {
                 if (map[nextY][nextX] == 0 || map[nextY][nextX] == sharkSz) {
-                    if (ck[nextY][nextX] == 0) {
-                        ck[nextY][nextX] = ck[now.first][now.second] + 1;
-                        q.push(make_pair(nextY, nextX));
-                    }
-                    else {
-                        if (ck[nextY][nextX] > ck[now.first][now.second] + 1) {
-                            ck[nextY][nextX] = ck[now.first][now.second] + 1;
-                            q.push(make_pair(nextY, nextX));
-                        }
-                    }
+                    ck[nextY][nextX] = min(ck[now.first][now.second] + 1, ck[nextY][nextX]);
+                    q.push(make_pair(nextY, nextX));
                 }
                 else if (map[nextY][nextX] > 0 && map[nextY][nextX] < sharkSz) {
                     if (result[0] == -1) {
@@ -192,6 +189,7 @@ vector<int> findXY(vii map, int y, int x, int sharkSz, int sharkEat) {
     cout << "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\n";
     }
 
+    cout << "S Z : " << sharkSz << " Shark E : " << sharkEat + 1 << endl;
     if (result[0] > 0 && sharkSz == sharkEat + 1) result[3] = 1;
     return result;
 }
