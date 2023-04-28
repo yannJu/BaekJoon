@@ -93,103 +93,106 @@ N×N 크기의 공간에 물고기 M마리와 아기 상어 1마리가 있다. �
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <climits>
-#define vii vector<vector<int> >
+#include <algorithm>
+#define vii vector<vector<int>> 
 using namespace std;
 
-vii DIR(4, vector<int>(2, 0));
-vector<int> findXY(vii map, int y, int x, int sharkSz, int sharkEat);
-int main() {
-    int N, sharkSz = 2, result = 0;
-    
-    cin >> N;
-    vii map(N, vector<int>(N, 0));
-
-    DIR[0][0] = -1; DIR[0][1] = 0; // UP
-    DIR[1][0] = 0; DIR[1][1] = -1; // LEFT
-    DIR[2][0] = 0; DIR[2][1] = 1; // RIGHT
-    DIR[3][0] = 1; DIR[3][1] = 0; // DOWN
-
+struct DIR {
     int y, x;
-    // Create Map
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
+    DIR(int _y, int _x): y(_y), x(_x) {};
+};
+DIR dir[4] = {
+    DIR(-1, 0), //up
+    DIR(0, -1), // left
+    DIR(0, 1), //right
+    DIR(1, 0) // down
+};
+
+struct compare {
+    bool operator() (pair<DIR, int> a, pair<DIR, int> b) {
+        if (a.second > b.second) return true;
+        else if (a.second == b.second) {
+            DIR aD = a.first, bD = b.first;
+
+            if (aD.y > bD.y) return true;
+            else if (aD.y == bD.y) {
+                if (aD.x > bD.x) return true;
+                else return false;
+            }
+            else return false;
+        }
+        else return false;
+    }
+};
+
+int main() {
+    int N, answer = 0;
+    queue<DIR> q;
+    cin >> N;
+
+    vii map(N, vector<int>(N, 0));
+    for (int i =0; i < N; i++) {
+        for (int j =0; j < N; j++) {
             cin >> map[i][j];
             
             if (map[i][j] == 9) {
-                x = j; y = i;
                 map[i][j] = 0;
+                q.push(DIR(i, j));
             }
         }
     }
 
-    // Fine Nearest Fish
-    vector<int> now; // 0 : y좌표, 1 : x좌표, 2 : 이동시간, 3 : 아기상어의 크기가 커질 수 있는지(1 : true, 0 : false)
-    int sharkEat = 0;
-    while(1) {
-        map[y][x] = 0;
-        now = findXY(map, y, x, sharkSz, sharkEat);
-        y = now[0]; x = now[1];
-        if (y < 0) break;
-        result += now[2];
-        sharkEat += 1;
-        if (now[3] == 1) {
-            sharkSz += 1;
-            sharkEat = 0;
-        }
-    }
-
-    cout << result << endl;
-}
-
-vector<int> findXY(vii map, int y, int x, int sharkSz, int sharkEat) {
-    queue<pair<int, int> > q;
-    vii ck(map.size(), vector<int>(map.size(), 99999));
-    vector<int> result(4, -1);
-
-    q.push(make_pair(y, x));
-    ck[y][x] = 0;
+    int size = 2, eat = 0;
     while(!q.empty()) {
-        pair<int, int> now = q.front();
+        priority_queue<pair<DIR, int> , vector<pair<DIR, int> >, compare> fishes;
+        queue<DIR> bfsQ;
+        vii ck(N, vector<int>(N, -1));
+        // 상어 현재위치 꺼내기
+        DIR now = q.front();
         q.pop();
+        // 현재 위치 탐색 Queue에 넣기
+        bfsQ.push(now);
+        ck[now.y][now.x] = 0;
+        // BFS 로 탐색하며 이동할  수 있는 좌표 담기
+        while(!bfsQ.empty()) {
+            DIR nowXY = bfsQ.front();
+            bfsQ.pop();
 
-        for (int i = 0; i < 4; i++) {
-            int nextY = now.first + DIR[i][0], nextX = now.second + DIR[i][1];
+            for (int i = 0; i < 4; i++) {
+                DIR nextXY(nowXY.y + dir[i].y, nowXY.x + dir[i].x);
 
-            if ((nextY >= 0 && nextY < map.size()) && (nextX >= 0 && nextX < map.size())) {
-                if (map[nextY][nextX] == 0 || map[nextY][nextX] == sharkSz) {
-                    ck[nextY][nextX] = min(ck[now.first][now.second] + 1, ck[nextY][nextX]);
-                    q.push(make_pair(nextY, nextX));
-                }
-                else if (map[nextY][nextX] > 0 && map[nextY][nextX] < sharkSz) {
-                    if (result[0] == -1) {
-                        result[0] = nextY; result[1] = nextX;
-                        ck[nextY][nextX] = min(ck[nextY][nextX], ck[now.first][now.second] + 1);
-                        result[2] = ck[nextY][nextX];
-                    }
-                    else {
-                        if (result[2] == ck[now.first][now.second] + 1) {
-                            if (result[0] > nextY) {
-                                result[0] = nextY; result[1] = nextX;
-                            }
-                            else if (result[0] == nextY) {
-                                if (result[1] > nextX) {
-                                    result[0] = nextY; result[1] = nextX;
-                                }
+                if ((nextXY.y >= 0 && nextXY.y < N) && (nextXY.x >= 0 && nextXY.x < N)) {
+                    if (map[nextXY.y][nextXY.x] <= size) {
+                        // 이동이 가능한 경우
+                        if (ck[nextXY.y][nextXY.x] == -1) {
+                            ck[nextXY.y][nextXY.x] = ck[nowXY.y][nowXY.x] + 1;
+                            bfsQ.push(DIR(nextXY.y, nextXY.x));
+
+                            // 먹을 수 있다면 . . . fishes 에 담자
+                            if (map[nextXY.y][nextXY.x] < size  && map[nextXY.y][nextXY.x] > 0)  {
+                                fishes.push(make_pair(DIR(nextXY.y, nextXY.x), ck[nextXY.y][nextXY.x])); // 다음좌표와 거리를 계산해서 push
                             }
                         }
+                        else ck[nextXY.y][nextXY.x] = min(ck[nowXY.y][nowXY.x] + 1, ck[nextXY.y][nextXY.x]);
                     }
                 }
             }
         }
-    for (int i = 0; i < map.size(); i++) {
-        for (int j = 0; j < map.size(); j++) cout << ck[i][j] << " ";
-        cout << endl;
-    }
-    cout << "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\n";
+
+        if (fishes.size() == 0) break;
+        pair<DIR, int> state = fishes.top();
+        // eat ====
+        DIR next(state.first);
+        eat += 1;
+        map[next.y][next.x] = 0;
+
+        if (eat == size) {
+            eat = 0;
+            size += 1;
+        }
+        q.push(next);
+        answer += state.second;
     }
 
-    cout << "S Z : " << sharkSz << " Shark E : " << sharkEat + 1 << endl;
-    if (result[0] > 0 && sharkSz == sharkEat + 1) result[3] = 1;
-    return result;
+    cout << answer << endl;
 }
