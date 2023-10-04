@@ -4,6 +4,11 @@
         "ostream": "cpp",
         "iostream": "cpp",
         "vector": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "queue": "cpp",
+        "cstdlib": "cpp",
+        "iosfwd": "cpp",
+        "xstring": "cpp",
+        "utility": "cpp"
     }
 }
