@@ -9,6 +9,7 @@
         "cstdlib": "cpp",
         "iosfwd": "cpp",
         "xstring": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "deque": "cpp"
     }
 }
