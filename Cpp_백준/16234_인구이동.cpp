@@ -34,30 +34,85 @@ N×N크기의 땅이 있고, 땅은 1×1개의 칸으로 나누어져 있다. �
 #include <iostream>
 #include <vector>
 #include <queue>
-#define vii vector<vector<int> > 
 using namespace std;
 
 struct DIR {
-    int x, y;
-    DIR(int _y, int _x): y(_y), x(_x) {};
+    int y;
+    int x;
 };
-DIR dir[4] = {
-    DIR(-1, 0),
-    DIR(0, 1),
-    DIR(1, 0),
-    DIR(0, -1)
-};
+DIR *dir = new DIR[4]{{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
-int main(){
-   int N, L, R;
+int main() {
+    int N, L, R;
+
     cin >> N >> L >> R;
+    vector<vector<int>> map(N, vector<int>(N, 0));
 
-    // Setting Map, Ck Ary =================
-   vii map(N, vector<int>(N, 0)), ck(N, vector<int>(N, 0));
-   for (int i = 0; i < N; i++) {
-        for (int j = 0;; j < N;j++) cin >> map[i][j];
-   }
-    // ==================================
+    // setting map
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) cin >> map[i][j];
+    }
 
-    
+    int answer = 0;
+    while(true) {
+        vector<vector<int>> visit(N, vector<int>(N, 0));
+        vector<pair<int, int>> memo(1, {-1, -1}); // cnt, num_sum
+
+        int turn = 0;
+        // 마을 탐색(turn)
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                queue<pair<int, int>> q;
+                if (visit[i][j] == 0) {
+                    turn += 1;
+                    q.push({i, j});
+                    memo.push_back({0, 0});
+                }
+
+                while(!q.empty()) {
+                    pair<int, int> now = q.front();
+                    q.pop();
+
+                    for (int d = 0; d < 4; d++) {
+                        int next_y = now.first + dir[d].y, next_x = now.second + dir[d].x;
+
+                        if ((next_y >= 0 && next_y < N) && (next_x >= 0 && next_x < N)) {
+                            if ((abs(map[now.first][now.second] - map[next_y][next_x]) >= L) && (abs(map[now.first][now.second] - map[next_y][next_x]) <= R)) {
+                                if (visit[now.first][now.second] == 0) {
+                                    visit[now.first][now.second] = turn;
+                                    memo[turn].first += 1;
+                                    memo[turn].second += map[now.first][now.second];
+                                }  // 현재 좌표가 여태까지 좌우에 인접한 마을이 없었을 경우]
+                                if (visit[next_y][next_x] == 0) {
+                                    visit[next_y][next_x] = turn;
+                                    memo[turn].first += 1;
+                                    memo[turn].second += map[next_y][next_x];
+                                    q.push({next_y, next_x});
+                                } // 인접한 좌표가 여태까지 좌우에 인접한 마을이 없었을 경우
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        int cnt = 0;
+        for (int i = 1; i < memo.size(); i++) {
+            cnt += memo[i].first;
+            if (memo[i].first > 0) {
+                int avg = memo[i].second / memo[i].first;
+
+                for (int j = 0; j < N; j++) {
+                    for (int k = 0; k < N; k++) {
+                        if (visit[j][k] == i) map[j][k] = avg;
+                    }
+                }
+            }
+        }
+        if (cnt == 0) break;
+        else answer += 1;
+    }
+
+    cout << answer << endl;
+    return 0;
 }
